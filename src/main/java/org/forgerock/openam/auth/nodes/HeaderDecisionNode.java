@@ -1,0 +1,96 @@
+// simon.moffatt@forgerock.com - checks given header name and header value
+
+package org.forgerock.openam.auth.nodes;
+
+import java.util.List;
+import java.util.ResourceBundle;
+
+import javax.inject.Inject;
+
+import org.forgerock.guava.common.collect.ImmutableList;
+import org.forgerock.json.JsonValue;
+import org.forgerock.openam.annotations.sm.Attribute;
+import org.forgerock.openam.auth.node.api.Action;
+import org.forgerock.openam.auth.node.api.Node;
+import org.forgerock.openam.auth.node.api.NodeProcessException;
+import org.forgerock.openam.auth.node.api.TreeContext;
+import org.forgerock.util.i18n.PreferredLocales;
+
+import com.google.inject.assistedinject.Assisted;
+
+
+@Node.Metadata(outcomeProvider = HeaderDecisionNode.OutcomeProvider.class,
+        configClass = HeaderDecisionNode.Config.class)
+public class HeaderDecisionNode implements Node {
+
+    /**
+     * Configuration for the node.
+     */
+    public interface Config {
+        /**
+         * The name of the HTTP header you're looking for
+         * @return the header name.
+         */
+        @Attribute(order = 100)
+        default String headerName() {
+            return "Name of Header";
+        }
+
+        /**
+         * The vlaue of the HTTP header.
+         * @return the header name.
+         */
+        @Attribute(order = 200)
+        default String headerValue() {
+            return "Value of Header";
+        }
+    }
+
+    private final Config config;
+
+    /**
+     * Create the node.
+     * @param config The service config.
+     * @throws NodeProcessException If the configuration was not valid.
+     */
+    @Inject
+    public HeaderDecisionNode(@Assisted Config config) throws NodeProcessException {
+        this.config = config;
+    }
+
+    @Override
+    public Action process(TreeContext context) throws NodeProcessException {
+
+        boolean headerPresent = context.headers.containsKey(config.headerName());
+        boolean headerValuePresent = context.headers.get(config.headerName()).contains(config.headerValue());
+
+        //Header found with correct value
+        if (headerPresent && headerValuePresent) {
+
+            return goTo("found").build();
+
+        } else {
+
+            return goTo("notFound").build();
+
+        }
+
+    }
+
+
+    private Action.ActionBuilder goTo(String outcome) {
+        return Action.goTo(outcome);
+    }
+
+    static final class OutcomeProvider implements org.forgerock.openam.auth.node.api.OutcomeProvider {
+        private static final String BUNDLE = HeaderDecisionNode.class.getName().replace(".", "/");
+
+        @Override
+        public List<Outcome> getOutcomes(PreferredLocales locales, JsonValue nodeAttributes) {
+            ResourceBundle bundle = locales.getBundleInPreferredLocale(BUNDLE, OutcomeProvider.class.getClassLoader());
+            return ImmutableList.of(
+                    new Outcome("found", bundle.getString("found")),
+                    new Outcome("notFound", bundle.getString("notFound")));
+        }
+    }
+}

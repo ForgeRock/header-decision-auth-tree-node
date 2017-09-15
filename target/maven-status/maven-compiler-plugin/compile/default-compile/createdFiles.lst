@@ -1,0 +1,4 @@
+org/forgerock/openam/auth/nodes/HeaderDecisionNodePlugin.class
+org/forgerock/openam/auth/nodes/HeaderDecisionNode$Config.class
+org/forgerock/openam/auth/nodes/HeaderDecisionNode$OutcomeProvider.class
+org/forgerock/openam/auth/nodes/HeaderDecisionNode.class
