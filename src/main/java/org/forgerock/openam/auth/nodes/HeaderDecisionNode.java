@@ -60,9 +60,8 @@ public class HeaderDecisionNode implements Node {
 
     @Override
     public Action process(TreeContext context) throws NodeProcessException {
-
-        boolean headerPresent = context.headers.containsKey(config.headerName());
-        boolean headerValuePresent = context.headers.get(config.headerName()).contains(config.headerValue());
+        boolean headerPresent = context.request.headers.containsKey(config.headerName());
+        boolean headerValuePresent = context.request.headers.get(config.headerName()).contains(config.headerValue());
 
         //Header found with correct value
         if (headerPresent && headerValuePresent) {
